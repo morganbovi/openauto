@@ -78,11 +78,12 @@ ServiceList ServiceFactory::create(aasdk::messenger::IMessenger::Pointer messeng
 
 IService::Pointer ServiceFactory::createVideoService(aasdk::messenger::IMessenger::Pointer messenger)
 {
-    // Try to use GStreamer-based video output first
-    auto videoOutput = std::make_shared<projection::GStreamerVideoOutput>(configuration_);
+    // Declare the video output pointer as IVideoOutput::Pointer
+    projection::IVideoOutput::Pointer videoOutput =
+         std::make_shared<projection::GStreamerVideoOutput>(configuration_);
+
     if (!videoOutput->open())
     {
-        // Log a warning that GStreamer failed and fall back to Qt
         qWarning() << "GStreamerVideoOutput failed to open; falling back to QtVideoOutput.";
         videoOutput = projection::IVideoOutput::Pointer(
             new projection::QtVideoOutput(configuration_),

@@ -1,12 +1,11 @@
 #pragma once
 
+#include <gst/gst.h>
+#include <gst/app/gstappsrc.h>
 #include <f1x/openauto/autoapp/Projection/IVideoOutput.hpp>
 #include <f1x/openauto/autoapp/Configuration/IConfiguration.hpp>
+#include <QRect>
 #include <memory>
-
-// You might also include other necessary headers (like GStreamer headers)
-// #include <gst/gst.h>
-// #include <gst/app/gstappsrc.h>
 
 namespace f1x {
 namespace openauto {
@@ -16,30 +15,32 @@ namespace projection {
 class GStreamerVideoOutput : public IVideoOutput
 {
 public:
-    // Define a type alias for a smart pointer, if you follow that convention.
     using Pointer = std::shared_ptr<GStreamerVideoOutput>;
 
-    // Constructor that accepts a configuration pointer.
+    // The constructor accepts a configuration pointer even though we won't call OMX-specific methods.
     explicit GStreamerVideoOutput(configuration::IConfiguration::Pointer configuration);
-
-    // Virtual destructor.
     virtual ~GStreamerVideoOutput();
 
-    // IVideoOutput interface implementation
+    // IVideoOutput interface implementations
     bool open() override;
     bool init() override;
     void write(uint64_t timestamp, const aasdk::common::DataConstBuffer& buffer) override;
     void stop() override;
 
+    // Return default video parameters.
+    aasdk::proto::enums::VideoFPS::Enum getVideoFPS() const override;
+    aasdk::proto::enums::VideoResolution::Enum getVideoResolution() const override;
+    size_t getScreenDPI() const override;
+    QRect getVideoMargins() const override;
+
 private:
-    // Private members (for example, pointers to your GStreamer pipeline, appsrc, etc.)
     configuration::IConfiguration::Pointer configuration_;
 
-    // Example: GStreamer pipeline pointer
+    // GStreamer elements.
     GstElement* pipeline_;
     GstElement* appsrc_;
 
-    // Other internal state variables as needed...
+    bool isActive_;
 };
 
 } // namespace projection
