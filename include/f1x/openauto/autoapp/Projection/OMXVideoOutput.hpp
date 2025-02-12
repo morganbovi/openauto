@@ -1,72 +1,48 @@
-/*
-*  This file is part of openauto project.
-*  Copyright (C) 2018 f1x.studio (Michal Szwaj)
-*
-*  openauto is free software: you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 3 of the License, or
-*  (at your option) any later version.
-
-*  openauto is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with openauto. If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#ifdef USE_OMX
 #pragma once
 
-extern "C"
-{
-#include <ilclient.h>
-}
+#include <f1x/openauto/autoapp/Projection/IVideoOutput.hpp>
+#include <f1x/openauto/autoapp/Configuration/IConfiguration.hpp>
+#include <memory>
 
-#include <mutex>
-#include <condition_variable>
-#include <thread>
-#include <boost/circular_buffer.hpp>
-#include <f1x/openauto/autoapp/Projection/VideoOutput.hpp>
+// You might also include other necessary headers (like GStreamer headers)
+// #include <gst/gst.h>
+// #include <gst/app/gstappsrc.h>
 
-namespace f1x
-{
-namespace openauto
-{
-namespace autoapp
-{
-namespace projection
-{
+namespace f1x {
+namespace openauto {
+namespace autoapp {
+namespace projection {
 
-class OMXVideoOutput: public VideoOutput
+class GStreamerVideoOutput : public IVideoOutput
 {
 public:
-    OMXVideoOutput(configuration::IConfiguration::Pointer configuration);
+    // Define a type alias for a smart pointer, if you follow that convention.
+    using Pointer = std::shared_ptr<GStreamerVideoOutput>;
 
+    // Constructor that accepts a configuration pointer.
+    explicit GStreamerVideoOutput(configuration::IConfiguration::Pointer configuration);
+
+    // Virtual destructor.
+    virtual ~GStreamerVideoOutput();
+
+    // IVideoOutput interface implementation
     bool open() override;
     bool init() override;
     void write(uint64_t timestamp, const aasdk::common::DataConstBuffer& buffer) override;
     void stop() override;
 
 private:
-    bool createComponents();
-    bool initClock();
-    bool setupTunnels();
-    bool enablePortBuffers();
-    bool setupDisplayRegion();
+    // Private members (for example, pointers to your GStreamer pipeline, appsrc, etc.)
+    configuration::IConfiguration::Pointer configuration_;
 
-    std::mutex mutex_;
-    bool isActive_;
-    bool portSettingsChanged_;
-    ILCLIENT_T* client_;
-    COMPONENT_T* components_[5];
-    TUNNEL_T tunnels_[4];
+    // Example: GStreamer pipeline pointer
+    GstElement* pipeline_;
+    GstElement* appsrc_;
+
+    // Other internal state variables as needed...
 };
 
-}
-}
-}
-}
-
-#endif
+} // namespace projection
+} // namespace autoapp
+} // namespace openauto
+} // namespace f1x

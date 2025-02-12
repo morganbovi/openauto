@@ -31,7 +31,7 @@
 #include <f1x/openauto/autoapp/Service/BluetoothService.hpp>
 #include <f1x/openauto/autoapp/Service/InputService.hpp>
 #include <f1x/openauto/autoapp/Projection/QtVideoOutput.hpp>
-#include <f1x/openauto/autoapp/Projection/OMXVideoOutput.hpp>
+#include <f1x/openauto/autoapp/Projection/GStreamerVideoOutput.hpp>
 #include <f1x/openauto/autoapp/Projection/RtAudioOutput.hpp>
 #include <f1x/openauto/autoapp/Projection/QtAudioOutput.hpp>
 #include <f1x/openauto/autoapp/Projection/QtAudioInput.hpp>
@@ -78,11 +78,17 @@ ServiceList ServiceFactory::create(aasdk::messenger::IMessenger::Pointer messeng
 
 IService::Pointer ServiceFactory::createVideoService(aasdk::messenger::IMessenger::Pointer messenger)
 {
-#ifdef USE_OMX
-    auto videoOutput(std::make_shared<projection::OMXVideoOutput>(configuration_));
-#else
-    projection::IVideoOutput::Pointer videoOutput(new projection::QtVideoOutput(configuration_), std::bind(&QObject::deleteLater, std::placeholders::_1));
-#endif
+    // Try to use GStreamer-based video output first
+    auto videoOutput = std::make_shared<projection::GStreamerVideoOutput>(configuration_);
+    if (!videoOutput->open())
+    {
+        // Log a warning that GStreamer failed and fall back to Qt
+        qWarning() << "GStreamerVideoOutput failed to open; falling back to QtVideoOutput.";
+        videoOutput = projection::IVideoOutput::Pointer(
+            new projection::QtVideoOutput(configuration_),
+            std::bind(&QObject::deleteLater, std::placeholders::_1)
+        );
+    }
     return std::make_shared<VideoService>(ioService_, messenger, std::move(videoOutput));
 }
 
