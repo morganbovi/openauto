@@ -31,9 +31,9 @@ bool GStreamerVideoOutput::open()
     // Initialize GStreamer (gst_init is safe to call repeatedly)
     gst_init(nullptr, nullptr);
 
-    // Create the pipeline using a simple launch string.
-    // This pipeline uses an appsrc element to accept H.264 data,
-    // then parses, decodes, converts, and renders via autovideosink.
+    // Create the pipeline using a launch string.
+    // This pipeline uses an appsrc element (named "video_src") to accept H.264 data,
+    // then parses, decodes, converts, and renders it using autovideosink.
     const char* pipelineDesc = "appsrc name=video_src ! h264parse ! avdec_h264 ! videoconvert ! autovideosink";
     GError* error = nullptr;
     pipeline_ = gst_parse_launch(pipelineDesc, &error);
@@ -45,7 +45,7 @@ bool GStreamerVideoOutput::open()
         return false;
     }
 
-    // Retrieve the appsrc element from the pipeline.
+    // Retrieve the appsrc element by name.
     appsrc_ = gst_bin_get_by_name(GST_BIN(pipeline_), "video_src");
     if (!appsrc_) {
         std::cerr << "Failed to retrieve appsrc element from the pipeline." << std::endl;
@@ -60,7 +60,7 @@ bool GStreamerVideoOutput::open()
     g_object_set(G_OBJECT(appsrc_), "caps", caps, "format", GST_FORMAT_TIME, nullptr);
     gst_caps_unref(caps);
 
-    // Set the pipeline to PLAYING.
+    // Set the pipeline to the PLAYING state.
     GstStateChangeReturn ret = gst_element_set_state(pipeline_, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         std::cerr << "Unable to set the GStreamer pipeline to PLAYING state." << std::endl;
@@ -73,7 +73,7 @@ bool GStreamerVideoOutput::open()
 
 bool GStreamerVideoOutput::init()
 {
-    // No additional initialization needed for this simple example.
+    // Additional initialization can be added here if necessary.
     return true;
 }
 
@@ -82,23 +82,23 @@ void GStreamerVideoOutput::write(uint64_t timestamp, const aasdk::common::DataCo
     if (!isActive_ || !appsrc_)
         return;
 
-    // Create a new GstBuffer sized to hold the data.
+    // Allocate a new GstBuffer to hold the video data.
     GstBuffer* gstBuffer = gst_buffer_new_allocate(nullptr, buffer.size, nullptr);
     if (!gstBuffer) {
         std::cerr << "Failed to allocate GstBuffer." << std::endl;
         return;
     }
 
-    // Copy the data from the input buffer into the GstBuffer.
+    // Copy the input data into the GstBuffer.
     gst_buffer_fill(gstBuffer, 0, buffer.cdata, buffer.size);
 
     // Set the presentation timestamp.
-    // Assuming 'timestamp' is in microseconds; convert to nanoseconds for GStreamer.
+    // Assume the 'timestamp' is in microseconds; convert to nanoseconds.
     GST_BUFFER_PTS(gstBuffer) = timestamp * 1000;
     // Set a default duration (for example, for 30 FPS).
     GST_BUFFER_DURATION(gstBuffer) = GST_SECOND / 30;
 
-    // Push the buffer into the appsrc.
+    // Push the buffer into appsrc.
     GstFlowReturn flowRet = gst_app_src_push_buffer(GST_APP_SRC(appsrc_), gstBuffer);
     if (flowRet != GST_FLOW_OK) {
         std::cerr << "Error pushing buffer into appsrc: " << flowRet << std::endl;
@@ -113,31 +113,29 @@ void GStreamerVideoOutput::stop()
     }
 }
 
-// --- Default implementations for video parameter getters ---
-// Since we're not using OMX or any hardware-specific configuration here,
-// we return constant defaults. Adjust these defaults as needed.
+// --- Video Parameter Getters ---
 
 aasdk::proto::enums::VideoFPS::Enum GStreamerVideoOutput::getVideoFPS() const
 {
-    // Default to 30 FPS.
-    return aasdk::proto::enums::VideoFPS::FPS_30;  // Adjust this value if your enum differs.
+    // Return 30 FPS as defined in the proto.
+    return aasdk::proto::enums::VideoFPS::Enum::_60;
 }
 
 aasdk::proto::enums::VideoResolution::Enum GStreamerVideoOutput::getVideoResolution() const
 {
-    // Default to HD720.
-    return aasdk::proto::enums::VideoResolution::HD720;  // Adjust as needed.
+    // Return 720p resolution as defined in the proto.
+    return aasdk::proto::enums::VideoResolution::Enum::_1080;
 }
 
 size_t GStreamerVideoOutput::getScreenDPI() const
 {
-    // Default DPI.
+    // Return a default DPI.
     return 96;
 }
 
 QRect GStreamerVideoOutput::getVideoMargins() const
 {
-    // No margins by default.
+    // Return no margins.
     return QRect();
 }
 

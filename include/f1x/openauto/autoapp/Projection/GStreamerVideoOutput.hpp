@@ -17,17 +17,17 @@ class GStreamerVideoOutput : public IVideoOutput
 public:
     using Pointer = std::shared_ptr<GStreamerVideoOutput>;
 
-    // The constructor accepts a configuration pointer even though we won't call OMX-specific methods.
+    // Constructor accepts a configuration pointer.
     explicit GStreamerVideoOutput(configuration::IConfiguration::Pointer configuration);
     virtual ~GStreamerVideoOutput();
 
-    // IVideoOutput interface implementations
+    // IVideoOutput interface implementations:
     bool open() override;
     bool init() override;
     void write(uint64_t timestamp, const aasdk::common::DataConstBuffer& buffer) override;
     void stop() override;
 
-    // Return default video parameters.
+    // Video parameter getters.
     aasdk::proto::enums::VideoFPS::Enum getVideoFPS() const override;
     aasdk::proto::enums::VideoResolution::Enum getVideoResolution() const override;
     size_t getScreenDPI() const override;
