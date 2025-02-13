@@ -118,13 +118,13 @@ void GStreamerVideoOutput::stop()
 aasdk::proto::enums::VideoFPS::Enum GStreamerVideoOutput::getVideoFPS() const
 {
     // Return 30 FPS as defined in the proto.
-    return aasdk::proto::enums::VideoFPS::Enum::_60;
+    return aasdk::proto::enums::VideoFPS::Enum::VideoFPS_Enum__60;
 }
 
 aasdk::proto::enums::VideoResolution::Enum GStreamerVideoOutput::getVideoResolution() const
 {
     // Return 720p resolution as defined in the proto.
-    return aasdk::proto::enums::VideoResolution::Enum::_1080;
+    return aasdk::proto::enums::VideoResolution::Enum::VideoResolution_Enum__1080p;
 }
 
 size_t GStreamerVideoOutput::getScreenDPI() const
